@@ -51,10 +51,10 @@ abstract class TweetSet {
   /**
    * Returns a new `TweetSet` that is the union of `TweetSet`s `this` and `that`.
    *
-   * Question: Should we implment this method here, or should it remain abstract
+   * Question: Should we implement this method here, or should it remain abstract
    * and be implemented in the subclasses?
    */
-    def union(that: TweetSet): TweetSet = ???
+    def union(that: TweetSet): TweetSet // this was left to be an abstract method and implemented in the subclasses
   
   /**
    * Returns the tweet from this set which has the greatest retweet count.
@@ -107,8 +107,11 @@ abstract class TweetSet {
 }
 
 class Empty extends TweetSet {
-    def filterAcc(p: Tweet => Boolean, acc: TweetSet): TweetSet = acc
-  
+  def filterAcc(p: Tweet => Boolean, acc: TweetSet): TweetSet = acc
+
+  // defining the union in this class because it's left to be abstract in the TweetSet
+  // a union of an Empty set will return the sent in TweetSet
+  def union(that: TweetSet): TweetSet = that
   /**
    * The following methods are already implemented
    */
@@ -124,8 +127,18 @@ class Empty extends TweetSet {
 
 class NonEmpty(elem: Tweet, left: TweetSet, right: TweetSet) extends TweetSet {
 
-    def filterAcc(p: Tweet => Boolean, acc: TweetSet): TweetSet = ???
-  
+  // the filterAcc should return if the element is a tweet then include the it in the correct set either left of right
+  def filterAcc(p: Tweet => Boolean, acc: TweetSet): TweetSet = {
+    if(p(elem)) {
+      left.filterAcc(p, right.filterAcc(p, acc.incl(elem)))
+    } else {
+      left.filterAcc(p, right.filterAcc(p, acc))
+    }
+  }
+
+  // defining the union in this class because it's left to be abstract in the TweetSet
+  // a union of a NonEmpty set will return the filterAcc of the tweet
+  def union(that: TweetSet): TweetSet = this.filterAcc(t => true, that)
     
   /**
    * The following methods are already implemented
