@@ -34,6 +34,9 @@ class Tweet(val user: String, val text: String, val retweets: Int) {
  */
 abstract class TweetSet {
 
+  // abstract method for isEmpty
+  def isEmpty: Boolean
+
   /**
    * This method takes a predicate and returns a subset of all the elements
    * in the original set for which the predicate is true.
@@ -65,7 +68,9 @@ abstract class TweetSet {
    * Question: Should we implment this method here, or should it remain abstract
    * and be implemented in the subclasses?
    */
-    def mostRetweeted: Tweet = ???
+
+  // this method is left abstract and is implemented in the subclasses since it'll be handled differently for each class
+    def mostRetweeted: Tweet
   
   /**
    * Returns a list containing all tweets of this set, sorted by retweet count
@@ -76,7 +81,9 @@ abstract class TweetSet {
    * Question: Should we implment this method here, or should it remain abstract
    * and be implemented in the subclasses?
    */
-    def descendingByRetweet: TweetList = ???
+
+    // this method is left abstract and is implemented in the subclasses
+    def descendingByRetweet: TweetList
   
   /**
    * The following methods are already implemented
@@ -112,6 +119,21 @@ class Empty extends TweetSet {
   // defining the union in this class because it's left to be abstract in the TweetSet
   // a union of an Empty set will return the sent in TweetSet
   def union(that: TweetSet): TweetSet = that
+
+  // initialize isEmpty
+  def isEmpty: Boolean = true
+
+  // this method is not needed since the decending tweets is null for an empty set
+  /*
+   * Calling `mostRetweeted` on an empty set should throw an exception of
+   * type `java.util.NoSuchElementException`.
+   */
+  def mostRetweeted: Tweet = throw new NoSuchElementException
+
+  // defining the descendingByRetweet in this class because it's left to be abstract in the TweetSet
+  // nothing will be returned if the set is empty
+  def descendingByRetweet: TweetList = Nil
+
   /**
    * The following methods are already implemented
    */
@@ -139,7 +161,38 @@ class NonEmpty(elem: Tweet, left: TweetSet, right: TweetSet) extends TweetSet {
   // defining the union in this class because it's left to be abstract in the TweetSet
   // a union of a NonEmpty set will return the filterAcc of the tweet
   def union(that: TweetSet): TweetSet = this.filterAcc(t => true, that)
-    
+
+  // defined for mostRetweeted
+  def isEmpty: Boolean = false
+
+  // define for mostRetweeted
+  def max(t1: Tweet, t2: Tweet): Tweet =
+    if (t1.retweets > t2.retweets) t1 else t2
+
+
+  // define mostRetweeted so decending by retweet can order the list correctly
+  // this method is not needed for empty sets
+  def mostRetweeted: Tweet = {
+    // if the lists are empty then return the element
+    if(left.isEmpty && right.isEmpty) elem
+    else if (left.isEmpty) max(elem, right.mostRetweeted)
+    else if (right.isEmpty) max(elem, left.mostRetweeted)
+    else {
+      // check if current is max
+      def maxRetweeeted = max(left.mostRetweeted, right.mostRetweeted)
+      max(maxRetweeeted, elem)
+    }
+  }
+
+  // defining the descendingByRetweet in this class because it's left to be abstract in the TweetSet
+  // nothing will be returned if the set is empty
+  // hint to take advantage of remove to help order the list
+  def descendingByRetweet: TweetList = {
+    val max = mostRetweeted
+    // continue to order the max to the head and process the rest of the list
+    new Cons(max, remove(max).descendingByRetweet)
+  }
+
   /**
    * The following methods are already implemented
    */
@@ -193,7 +246,7 @@ object GoogleVsApple {
   val google = List("android", "Android", "galaxy", "Galaxy", "nexus", "Nexus")
   val apple = List("ios", "iOS", "iphone", "iPhone", "ipad", "iPad")
 
-    lazy val googleTweets: TweetSet = ???
+  lazy val googleTweets: TweetSet = ???
   lazy val appleTweets: TweetSet = ???
   
   /**
